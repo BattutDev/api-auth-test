@@ -4,11 +4,9 @@ import * as session from 'express-session';
 import { createClient } from 'redis';
 import { AppModule } from './app.module';
 
-// Initialize client.
 const redisClient = createClient();
 redisClient.connect().catch(console.error);
 
-// Initialize store.
 // @ts-ignore
 const redisStore = new RedisStore({
   // @ts-ignore
@@ -17,11 +15,10 @@ const redisStore = new RedisStore({
 });
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // we add sessions middleware
   app.use(
     session({
       store: redisStore,
-      secret: 'super-secret',
+      secret: 'cat-on-a-keyboard',
       resave: false,
       saveUninitialized: false,
     }),
