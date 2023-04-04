@@ -47,10 +47,19 @@ export default class User {
   })
   public password: string;
 
+  @Column({
+    name: 'active',
+    default: true,
+    type: 'boolean',
+  })
+  public isActive: boolean;
+
   @OneToOne(() => Role, (role) => role.name, {})
   @JoinColumn({
     referencedColumnName: 'name',
     name: 'role',
   })
-  public role: Role;
+  public role: string;
 }
+
+export type SessionUserType = Omit<User, 'password'>;
