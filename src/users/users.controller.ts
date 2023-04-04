@@ -11,7 +11,6 @@ export class UsersController {
 
   @Get('/@me')
   getMyUserInfo(@GetSession() session: UserSession): Promise<User> {
-    if (!session.user) throw new UnauthorizedException('Not authenticated');
     return this.service.getById(session.user.id);
   }
 }
