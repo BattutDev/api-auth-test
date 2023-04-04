@@ -8,6 +8,12 @@ Rest API propulsée par [Nest](https://github.com/nestjs/nest) avec sessions et 
 $ npm install
 ```
 
+
+```bash
+# Redis & redis commander
+$  docker compose up -d
+```
+
 ## Running the app
 
 ```bash
