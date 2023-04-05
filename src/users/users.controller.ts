@@ -14,4 +14,16 @@ export class UsersController {
   getMyUserInfo(@GetSession() session: UserSession): Promise<User> {
     return this.service.getById(session.user.id);
   }
+
+  @Get('/admins')
+  @Roles('root')
+  getAdmins(): Promise<Array<User>> {
+    return this.service.getUsersByRoles(['admin']);
+  }
+
+  @Get('/all')
+  @Roles('root', 'admin')
+  getUsers(): Promise<Array<User>> {
+    return this.service.getUsersByRoles(['user', 'premium', 'moderator']);
+  }
 }
