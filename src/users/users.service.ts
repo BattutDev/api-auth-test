@@ -37,4 +37,9 @@ export class UsersService {
       },
     });
   }
+
+  insert(body: Omit<User, 'id'>): Promise<User> {
+    const user = this.userRepository.create(body);
+    return this.userRepository.save(user);
+  }
 }
