@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   NotAcceptableException,
+  Patch,
   Post,
 } from '@nestjs/common';
 import User from '../entities/user.entity';
@@ -13,6 +14,11 @@ import { Roles } from '../roles/roles.decorator';
 import { RoleType } from '../entities/role.entity';
 
 export type CreateUserBody = Omit<User, 'id'>;
+
+export type EditActiveBody = {
+  id: number;
+  isActive: boolean;
+};
 
 @Controller('users')
 export class UsersController {
@@ -36,6 +42,23 @@ export class UsersController {
     return this.service.insert(body);
   }
 
+  @Patch('/active/')
+  @Roles('admin', 'root')
+  async setActiveStatus(@Body() body: EditActiveBody): Promise<boolean> {
+    const fn = (user: User) => {
+      if (
+        (<Array<RoleType>>['user', 'premium', 'moderator']).includes(
+          user.role.name,
+        )
+      )
+        throw new NotAcceptableException(
+          'Use this route for edit an common user, premium or moderator',
+        );
+    };
+
+    return this.service.editActiveStatus(body, fn);
+  }
+
   @Get('/@me')
   @Roles('user')
   getMyUserInfo(@GetSession() session: UserSession): Promise<User> {
@@ -56,5 +79,18 @@ export class UsersController {
         'This route is reserved for admin user insertion.',
       );
     return this.service.insert(body);
+  }
+
+  @Patch('/admins/active/')
+  @Roles('root')
+  async setAdminActiveStatus(@Body() body: EditActiveBody): Promise<boolean> {
+    const fn = (user: User) => {
+      if (user.role.name !== 'admin')
+        throw new NotAcceptableException(
+          'This route is reserved for admin user insertion.',
+        );
+    };
+
+    return this.service.editActiveStatus(body, fn);
   }
 }
