@@ -2,6 +2,8 @@
 
 Rest API propulsée par [Nest](https://github.com/nestjs/nest) avec sessions et authentifications avec redis et postgresql
 
+> Warning ! The user's passwords aren't crypted
+
 ## Installation
 
 ```bash
@@ -32,35 +34,6 @@ $ npm run start:dev
 # production mode
 $ npm run start:prod
 ```
-
-## Routes documentation
-
-> #### identifying
-> `POST /login`
->> ##### body
->> ```json
->>{
->>    "login": "jdoe",
->>    "password": "P@ssw0rd"
->>}
->>```
-> 
->> ##### response
->>```json
->>{
->>    "id": 0,
->>    "login": "jdoe",
->>    "mail": "john@doe.com",
->>    "firstName": "john",
->>    "lastName": "doe",
->>    "isActive": true
->>}
->>```
-
-> #### disconnect
-> `POST /logout`
->> Not body required,
->> This endpoint does not return response, only a `204 No Content`
 
 ## License
 
