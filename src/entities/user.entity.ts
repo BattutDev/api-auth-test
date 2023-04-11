@@ -2,7 +2,7 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
-  OneToOne,
+  ManyToOne,
   JoinColumn,
 } from 'typeorm';
 import Role, { RoleType } from './role.entity';
@@ -54,7 +54,7 @@ export default class User {
   })
   public isActive: boolean;
 
-  @OneToOne(() => Role, (role) => role.name, {
+  @ManyToOne(() => Role, (role) => role.name, {
     eager: true,
   })
   @JoinColumn({
