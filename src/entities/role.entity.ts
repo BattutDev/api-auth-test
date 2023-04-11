@@ -1,6 +1,6 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Entity, PrimaryColumn } from 'typeorm';
 
-export type RoleType = 'user' | 'premium' | 'moderator' | 'admin' | 'root';
+export type RoleType = 'user' | 'premium' | 'moderator' | 'admin';
 
 @Entity({
   name: 'roles',

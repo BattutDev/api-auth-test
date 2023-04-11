@@ -41,7 +41,6 @@ export class AppController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('logout')
   logout(@GetSession() session: UserSession) {
-    if (!session.user) throw new UnauthorizedException('Not authenticated');
     return new Promise((resolve, reject) => {
       session.destroy((err) => {
         if (err) reject(err);
