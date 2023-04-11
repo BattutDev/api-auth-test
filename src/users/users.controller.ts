@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotAcceptableException,
+  Param,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -25,13 +27,17 @@ export class UsersController {
   constructor(private readonly service: UsersService) {}
 
   @Get('/')
-  @Roles('root', 'admin')
+  @Roles('admin')
   getUsers(): Promise<Array<User>> {
-    return this.service.getUsersByRoles(['user', 'premium']);
+    return this.service.getByRoles(['user', 'premium', 'moderator']);
   }
 
+  /**
+   * Create a user
+   * @param body
+   */
   @Post('/')
-  @Roles('root', 'admin')
+  @Roles('admin')
   insertUser(@Body() body: CreateUserBody): Promise<User> {
     if (
       !(<Array<RoleType>>['user', 'premium', 'moderator']).includes(
@@ -42,55 +48,38 @@ export class UsersController {
     return this.service.insert(body);
   }
 
+  /**
+   * Change active status of a user
+   * @param body
+   */
   @Patch('/active/')
-  @Roles('admin', 'root')
+  @Roles('admin')
   async setActiveStatus(@Body() body: EditActiveBody): Promise<boolean> {
-    const fn = (user: User) => {
-      if (
-        (<Array<RoleType>>['user', 'premium', 'moderator']).includes(
-          user.role.name,
-        )
-      )
-        throw new NotAcceptableException(
-          'Use this route for edit an common user, premium or moderator',
-        );
-    };
-
-    return this.service.editActiveStatus(body, fn);
+    return this.service.editActiveStatus(body);
   }
 
+  /**
+   * Get information from its own account
+   * @param session
+   */
   @Get('/@me')
-  @Roles('user')
   getMyUserInfo(@GetSession() session: UserSession): Promise<User> {
     return this.service.getById(session.user.id);
   }
 
-  @Get('/admins')
-  @Roles('root')
-  getAdmins(): Promise<Array<User>> {
-    return this.service.getUsersByRoles(['admin']);
+  /**
+   * Delete a user
+   * @param id
+   */
+  @Delete('/:id')
+  @Roles('admin')
+  async delete(@Param() { id }) {
+    return this.service.delete(id);
   }
 
-  @Post('/admins')
-  @Roles('root')
-  insertAdmin(@Body() body: CreateUserBody): Promise<User> {
-    if (body.role.name !== 'admin')
-      throw new NotAcceptableException(
-        'This route is reserved for admin user insertion.',
-      );
-    return this.service.insert(body);
-  }
-
-  @Patch('/admins/active/')
-  @Roles('root')
-  async setAdminActiveStatus(@Body() body: EditActiveBody): Promise<boolean> {
-    const fn = (user: User) => {
-      if (user.role.name !== 'admin')
-        throw new NotAcceptableException(
-          'This route is reserved for admin user insertion.',
-        );
-    };
-
-    return this.service.editActiveStatus(body, fn);
+  @Patch('/')
+  @Roles('admin')
+  async update(@Body() body: User): Promise<User> {
+    return this.service.update(body);
   }
 }

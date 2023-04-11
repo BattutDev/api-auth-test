@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotAcceptableException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import User from '../entities/user.entity';
@@ -10,6 +15,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
   async login(login: string, password: string): Promise<User> {
     return this.userRepository.findOne({
       where: {
@@ -19,6 +25,7 @@ export class UsersService {
       },
     });
   }
+
   getById(uid: number): Promise<User> {
     return this.userRepository.findOne({
       select: ['id', 'login', 'mail', 'firstName', 'lastName', 'isActive'],
@@ -28,8 +35,17 @@ export class UsersService {
     });
   }
 
-  getUsersByRoles(role: Array<RoleType>): Promise<Array<User>> {
+  getByRoles(role: Array<RoleType>): Promise<Array<User>> {
     return this.userRepository.find({
+      select: [
+        'id',
+        'login',
+        'mail',
+        'firstName',
+        'lastName',
+        'isActive',
+        'role',
+      ],
       where: {
         role: {
           name: In(role),
@@ -52,18 +68,38 @@ export class UsersService {
           },
         })
         .then((user: User) => {
+          if (
+            !(<Array<RoleType>>['user', 'premium', 'moderator']).includes(
+              user.role.name,
+            )
+          )
+            throw new NotAcceptableException(
+              'Use this route for edit an common user, premium or moderator',
+            );
           const newUser = this.userRepository.merge(user, body);
           this.userRepository.save(newUser).then(resolve);
         });
     });
   }
 
-  async editActiveStatus(
-    body: EditActiveBody,
-    fn: (user: User) => void,
-  ): Promise<boolean> {
+  async editActiveStatus(body: EditActiveBody): Promise<boolean> {
     const user = await this.getById(body.id);
-    fn(user);
+    if (!user)
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_MODIFIED,
+          error: 'Cannot find this user',
+        },
+        HttpStatus.NOT_MODIFIED,
+      );
+    if (
+      !(<Array<RoleType>>['user', 'premium', 'moderator']).includes(
+        user.role.name,
+      )
+    )
+      throw new NotAcceptableException(
+        'Use this route for edit an common user, premium or moderator',
+      );
     user.isActive = body.isActive;
     const newUser = await this.update(user);
     if (newUser instanceof User) return true;
@@ -75,5 +111,29 @@ export class UsersService {
         },
         HttpStatus.NOT_MODIFIED,
       );
+  }
+
+  async delete(uid: number): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: uid,
+      },
+    });
+    if (!user || !(user instanceof User))
+      throw new HttpException('Cannot foud user', HttpStatus.NOT_MODIFIED);
+    if (
+      !(<Array<RoleType>>['user', 'premium', 'moderator']).includes(
+        user.role.name,
+      )
+    )
+      throw new HttpException(
+        'Use this route for edit an common user, premium or moderator',
+        HttpStatus.NOT_MODIFIED,
+      );
+    return this.userRepository
+      .delete({
+        id: user.id,
+      })
+      .then(() => true);
   }
 }
